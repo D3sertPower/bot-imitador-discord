@@ -1,7 +1,7 @@
 import discord
 import json
 import datetime
-import asyncio  # IMPORTANTE: Adicionado para rodar a checagem em background
+import asyncio
 from random import choice, randint
 from discord.ext import commands
 from google.genai import types
@@ -24,7 +24,6 @@ tempo_anterior = None
 
 client = genai.Client(api_key=api_key)
 
-# --- CORREÇÃO AQUI: Adicionado encoding="utf-8" para evitar o "nÃ£o" ---
 with open('personalidade.txt', 'r', encoding='utf-8') as persona:
     PERSONALIDADE = persona.read()
 
@@ -66,7 +65,6 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    # Correção nas globais para evitar erros em runtime
     global PERSONALIDADE, client, model, tempo_atual, tempo_anterior
 
     if message.author.bot:
