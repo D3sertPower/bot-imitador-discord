@@ -35,9 +35,24 @@ with open("dialogos.json", "r", encoding="utf-8") as json_arq:
 models = ['gemini-3.1-flash-lite','gemini-3.5-flash','gemini-3-flash-preview','gemma-31b-it']
 model = 'gemini-3.1-flash-lite'
 
-def perguntar(texto):
+def perguntar(texto,imagem_bytes,imagem_type):
     global tokens_por_resposta
-    resposta = client.models.generate_content(
+    if imagem_bytes and imagem_type:
+        resposta = client.models.generate_content(
+            model=f"{model}",
+            contents=[
+                f"{PERSONALIDADE}\n\n\nUsuário: {texto}",
+                types.Part.from_bytes(
+                    data=imagem_bytes,
+                    mime_type=imagem_type
+                )
+            ],
+            config=types.GenerateContentConfig(
+                maxOutputTokens=tokens_por_resposta
+            )
+        )
+    else:
+        resposta = client.models.generate_content(
         model=f"{model}",
         contents=f"{PERSONALIDADE}\n\n\nUsuário: {texto}",
         config=types.GenerateContentConfig(
@@ -69,7 +84,7 @@ async def on_message(message):
 
     if message.author.bot:
         return
-    
+                
     if message.reference and bot.user in message.mentions:
         texto = (
             message.content
@@ -118,6 +133,44 @@ async def on_message(message):
                 await attachment.save(f"{id}.png")
                 imagens[f"{id}"] = f"{id}.png"
                 salvarImagens()
+                if bot.user in message.mentions:
+                    texto = (
+                        message.content
+                        .replace(f"<@{bot.user.id}>", "")
+                        .replace(f"<@!{bot.user.id}>", "")
+                        .strip()
+                    )
+                    try:
+                        imagem_bytes = await attachment.read()
+                        imagem_type = attachment.content_type
+                        resposta = perguntar(texto,imagem_bytes,imagem_type)
+                        await message.reply(resposta)
+                        return
+                    except ClientError as e:
+                        print("Erro ao gerar resposta:", e)
+                        try:
+                            if "RATE_LIMIT_EXCEEDED" in str(e):
+                                if tempo_atual:
+                                    tempo_anterior = tempo_atual
+                                tempo_atual = (datetime.datetime.now()).timestamp() # Correção do datetime
+                    
+                            if not tempo_anterior or (tempo_atual - tempo_anterior < 60): 
+                                model_anterior = model
+                                model = models[3]
+                                resposta = perguntar(texto)
+                                model = model_anterior
+                            else:
+                                models.remove(model)
+                                model = models[0]
+                                resposta = perguntar(texto)
+                                async with message.channel.typing:        
+                                    await message.reply(resposta)
+                        except Exception as e_nova:
+                            print(e_nova)
+                            async with message.channel.typing:
+                                await message.reply('to na faculdade cara dps eu respondo')
+
+
 
     if bot.user not in message.mentions and not message.attachments:
         
