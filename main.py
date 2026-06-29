@@ -160,7 +160,7 @@ async def on_message(message):
                 await attachment.save("personalidade.txt")
             else:
                 print(arq.content_type)
-                return    
+            return    
         if "mude sua personalidade" in texto and message.author.guild_permissions.administrator:
             ajustado = (
                 texto
