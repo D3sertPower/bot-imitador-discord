@@ -81,7 +81,8 @@ async def on_message(message):
         reply = str(mensagem_original.author) + " (falou): " + mensagem_original.content
         try:
             resposta = perguntar(texto + " " + reply)
-            await message.reply(resposta)
+            async with message.channel.typing():
+                await message.reply(resposta)
             return
         except ClientError as e:
             print("Erro ao gerar resposta:", e)
@@ -125,7 +126,8 @@ async def on_message(message):
             print('Rufem os tambores.')
             resultado_da_checagem = await asyncio.to_thread(checar, message.content)
             if '456' not in resultado_da_checagem:
-                await message.reply(resultado_da_checagem)
+                async with message.channel.typing:
+                    await message.reply(resultado_da_checagem)
                 return
         chance = randint(1,40)
         if chance >= 35 and chance != 40:
@@ -177,7 +179,8 @@ async def on_message(message):
             
         try:
             resposta = perguntar(texto)
-            await message.reply(resposta)
+            async with message.channel.typing:
+                await message.reply(resposta)
             return
         except ClientError as e:
             print("Erro ao gerar resposta:", e)
@@ -196,10 +199,12 @@ async def on_message(message):
                         models.remove(model)
                         model = models[0]
                         resposta = perguntar(texto)
-                await message.reply(resposta)
+                async with message.channel.typing:        
+                    await message.reply(resposta)
             except Exception as e_nova:
                 print(e_nova)
-                await message.reply('to na faculdade cara dps eu respondo')
+                async with message.channel.typing:
+                    await message.reply('to na faculdade cara dps eu respondo')
                 
     id = randint(1,9999999)
     if message.content != '' and 'gif' not in message.content and 'https' not in message.content:
