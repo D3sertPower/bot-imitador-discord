@@ -18,7 +18,6 @@ contador = 0
 discord_token = getenv('DISCORD_TOKEN','')
 tokens_por_resposta = int(getenv('MAX_TOKENS',''))
 
-# Variáveis de controle de erro (Rate Limit) inicializadas corretamente
 tempo_atual = None
 tempo_anterior = None
 
@@ -28,7 +27,7 @@ with open('personalidade.txt', 'r', encoding='utf-8') as persona:
     PERSONALIDADE = persona.read()
 
 with open("imagens.json", "r", encoding="utf-8") as json_file:
-    imagens = json.load(json_file) # fiz essa porra sem vibe code tá, chupa max!!!
+    imagens = json.load(json_file) # fiz essa porra sem vibe code tá, chupa max!!! Max- foda-se
 
 with open("dialogos.json", "r", encoding="utf-8") as json_arq:
     dialogos = json.load(json_arq)
@@ -40,7 +39,7 @@ def perguntar(texto):
     global tokens_por_resposta
     resposta = client.models.generate_content(
         model=f"{model}",
-        contents=f"{PERSONALIDADE}\n\nUsuário: {texto}",
+        contents=f"{PERSONALIDADE}\n\n\nUsuário: {texto}",
         config=types.GenerateContentConfig(
             maxOutputTokens=tokens_por_resposta
         )
@@ -65,11 +64,47 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
+
     global PERSONALIDADE, client, model, tempo_atual, tempo_anterior
 
     if message.author.bot:
         return
-        
+    
+    if message.reference and bot.user in message.mentions:
+        texto = (
+            message.content
+            .replace(f"<@{bot.user.id}>", "")
+            .replace(f"<@!{bot.user.id}>", "")
+            .strip()
+        )
+        mensagem_original = await message.channel.fetch_message(message.reference.message_id)
+        reply = str(mensagem_original.author) + " (falou): " + mensagem_original.content
+        try:
+            resposta = perguntar(texto + " " + reply)
+            await message.reply(resposta)
+            return
+        except ClientError as e:
+            print("Erro ao gerar resposta:", e)
+            try:
+                if "RATE_LIMIT_EXCEEDED" in str(e):
+                    if tempo_atual:
+                        tempo_anterior = tempo_atual
+                    tempo_atual = (datetime.datetime.now()).timestamp() # Correção do datetime
+                    
+                    if not tempo_anterior or (tempo_atual - tempo_anterior < 60): 
+                        model_anterior = model
+                        model = models[3]
+                        resposta = perguntar(texto + " " + reply)
+                        model = model_anterior
+                    else:
+                        models.remove(model)
+                        model = models[0]
+                        resposta = perguntar(texto + " " + reply)
+                await message.reply(resposta)
+            except Exception as e_nova:
+                print(e_nova)
+                await message.reply('to na faculdade cara dps eu respondo')
+
     if "tenor.com" in message.content or ".gif?ex" in message.content or ".png?ex" in message.content:
         id = randint(1,100000000)
         imagens[f"{id}"] = str(message.content)
@@ -83,20 +118,15 @@ async def on_message(message):
                 imagens[f"{id}"] = f"{id}.png"
                 salvarImagens()
 
-    # --- BLOCO ONDE O BOT NÃO É MENCIONADO ---
     if bot.user not in message.mentions and not message.attachments:
         
-        # 1. Roda a função checar() em background enviando a mensagem atual
         chance = randint(1,6)
         if chance >= 4:
             print('Rufem os tambores.')
             resultado_da_checagem = await asyncio.to_thread(checar, message.content)
-        # 2. Se retornar o texto começado com Y, responde e para a execução aqui
             if '456' not in resultado_da_checagem:
                 await message.reply(resultado_da_checagem)
                 return
-                
-        # Se a checagem deu False, o bot segue o seu fluxo original de chances:
         chance = randint(1,40)
         if chance >= 35 and chance != 40:
             imagem_sorteada = choice(list(imagens.values()))
@@ -126,7 +156,6 @@ async def on_message(message):
                 .strip()
             )
             PERSONALIDADE = PERSONALIDADE + "\n" + "- " + ajustado
-            # --- CORREÇÃO AQUI: Salvando a nova personalidade em UTF-8 ---
             with open('personalidade.txt', 'w', encoding='utf-8') as persona:
                 persona.write(PERSONALIDADE)
             print("Nova personalidade salva:")
