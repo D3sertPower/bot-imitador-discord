@@ -149,6 +149,18 @@ async def on_message(message):
             .replace(f"<@!{bot.user.id}>", "")
             .strip()
         )
+        if "dump sua personalidade" in texto and message.author.guild_permissions.administrator:
+            with open('personalidade.txt', 'r', encoding='utf-8') as persona:
+                dump = discord.File("personalidade.txt")
+                await message.reply(file=dump)
+                return
+        if "atualize sua personalidade" in texto and message.author.guild_permissions.administrator and message.attachments:
+            arq = message.attachments[0]
+            if arq.content_type.startswith('text/'):
+                await attachment.save("personalidade.txt")
+            else:
+                print(arq.content_type)
+                return    
         if "mude sua personalidade" in texto and message.author.guild_permissions.administrator:
             ajustado = (
                 texto
