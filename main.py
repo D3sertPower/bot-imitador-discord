@@ -163,11 +163,11 @@ async def on_message(message):
                                 models.remove(model)
                                 model = models[0]
                                 resposta = perguntar(texto)
-                                async with message.channel.typing:        
+                                async with message.channel.typing():        
                                     await message.reply(resposta)
                         except Exception as e_nova:
                             print(e_nova)
-                            async with message.channel.typing:
+                            async with message.channel.typing():
                                 await message.reply('to na faculdade cara dps eu respondo')
 
 
@@ -179,7 +179,7 @@ async def on_message(message):
             print('Rufem os tambores.')
             resultado_da_checagem = await asyncio.to_thread(checar, message.content)
             if '456' not in resultado_da_checagem:
-                async with message.channel.typing:
+                async with message.channel.typing():
                     await message.reply(resultado_da_checagem)
                 return
         chance = randint(1,40)
@@ -232,7 +232,7 @@ async def on_message(message):
             
         try:
             resposta = perguntar(texto)
-            async with message.channel.typing:
+            async with message.channel.typing():
                 await message.reply(resposta)
             return
         except ClientError as e:
@@ -252,11 +252,11 @@ async def on_message(message):
                         models.remove(model)
                         model = models[0]
                         resposta = perguntar(texto)
-                async with message.channel.typing:        
+                async with message.channel.typing():        
                     await message.reply(resposta)
             except Exception as e_nova:
                 print(e_nova)
-                async with message.channel.typing:
+                async with message.channel.typing():
                     await message.reply('to na faculdade cara dps eu respondo')
                 
     id = randint(1,9999999)
