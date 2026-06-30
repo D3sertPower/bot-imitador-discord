@@ -35,7 +35,7 @@ with open("dialogos.json", "r", encoding="utf-8") as json_arq:
 models = ['gemini-3.1-flash-lite','gemini-3.5-flash','gemini-3-flash-preview','gemma-31b-it']
 model = 'gemini-3.1-flash-lite'
 
-def perguntar(texto,imagem_bytes,imagem_type):
+def perguntar(texto,imagem_bytes=False,imagem_type=False):
     global tokens_por_resposta
     if imagem_bytes and imagem_type:
         resposta = client.models.generate_content(
